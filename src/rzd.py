@@ -8,13 +8,6 @@ from matplotlib import pyplot as plt
 from src.pca import IPCA
 from src.regression import SimpleLinearRegression
 
-plt.style.use('seaborn-whitegrid')
-plt.rcParams['figure.figsize'] = 4, 3
-plt.rcParams['grid.linestyle'] = 'dotted'
-plt.rcParams['lines.linewidth'] = 0.7
-plt.rcParams['lines.marker'] = '.'
-plt.rcParams['lines.markersize'] = 4
-
 
 class PlacePriceModel:
     def __init__(self):

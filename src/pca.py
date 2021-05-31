@@ -71,7 +71,7 @@ class IPCA:
 
         cov = np.cov(x_centered.T)
 
-        self.eigval, self.eigvec = np.linalg.eig(cov)
+        self.eigval, self.eigvec = np.linalg.eigh(cov)
 
         ids = np.argsort(self.eigval)[::-1]
         self.eigval = self.eigval[ids]
@@ -80,7 +80,7 @@ class IPCA:
         self.explained_variance_ratio = (self.eigval / self.eigval.sum()).cumsum()
 
         self.v = self.eigvec[:, :self.n_components]
-        self.v *= self.v[0] / np.abs(self.v[0])
+        self.v *= np.sign(self.v[0])
 
         self.a = x_centered.dot(self.v)
 
@@ -103,6 +103,10 @@ class IPCA:
         self.w[missing] = 0
 
         mean = np.nanmean(self.x_filled, axis=0)
+
+        if np.isnan(mean).any():
+            raise RuntimeError('fully nan columns in fitted data are not accepted')
+
         self.x_filled[missing] = mean[missing[1]]
 
         self.scores = []
@@ -118,6 +122,4 @@ class IPCA:
                 if score < self.tol:
                     return self
 
-        print(f'warning! did not converge in {self.maxiter} iterations. best score: {min(self.scores)}')
-
-        return self
+        raise RuntimeError(f'did not converge in {self.maxiter} iterations. best score: {min(self.scores)}')

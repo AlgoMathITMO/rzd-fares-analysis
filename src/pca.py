@@ -80,7 +80,12 @@ class IPCA:
         self.explained_variance_ratio = (self.eigval / self.eigval.sum()).cumsum()
 
         self.v = self.eigvec[:, :self.n_components]
-        self.v *= np.sign(self.v[0])
+
+        # self.v *= np.sign(self.v[0])
+
+        for i in range(self.v.shape[1]):
+            if (self.v[:, i] < 0).mean() > 0.5:
+                self.v[:, i] *= -1
 
         self.a = x_centered.dot(self.v)
 

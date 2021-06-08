@@ -77,11 +77,9 @@ class IPCA:
         self.eigval = self.eigval[ids]
         self.eigvec = self.eigvec[:, ids]
 
-        self.explained_variance_ratio = (self.eigval / self.eigval.sum()).cumsum()
+        self.explained_variance_ratio = (self.eigval / self.eigval.sum()).cumsum()[:self.n_components]
 
         self.v = self.eigvec[:, :self.n_components]
-
-        # self.v *= np.sign(self.v[0])
 
         for i in range(self.v.shape[1]):
             if (self.v[:, i] < 0).mean() > 0.5:

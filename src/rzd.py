@@ -16,16 +16,16 @@ class PlacePriceModel:
         self.index = None
         self.columns = None
 
-        self.ipca = IPCA(n_components=1)
+        self.ipca = None
         self.explained_variance = None
         self.mean = None
         self.v = None
         self.a = None
 
-        self.regression = SimpleLinearRegression()
+        self.regression = None
         self.r2 = None
 
-    def fit(self, places: pd.DataFrame, prices: pd.DataFrame) -> 'PlacePriceModel':
+    def fit(self, places: pd.DataFrame, prices: pd.DataFrame, n_components: int) -> 'PlacePriceModel':
         assert places.shape == prices.shape
         assert (places.columns == prices.columns).all()
         assert (places.index == prices.index).all()
@@ -34,15 +34,17 @@ class PlacePriceModel:
         self.prices = prices.values
         self.index = places.index
         self.columns = places.columns
-
+        
+        self.ipca = IPCA(n_components=n_components, maxiter=100000000)
         self.ipca.fit(self.places)
         self.explained_variance = self.ipca.explained_variance_ratio[0]
         self.mean = pd.Series(self.ipca.mean, index=self.columns)
-        self.v = pd.Series(self.ipca.v.flatten(), index=self.columns)
+        self.v = pd.Series(self.ipca.v[:, 0], index=self.columns)
 
         all_timestamps = np.arange(min(self.index), max(self.index) + timedelta(days=1), timedelta(days=1))
-        self.a = pd.Series(self.ipca.a.flatten(), index=self.index).reindex(all_timestamps)
+        self.a = pd.Series(self.ipca.a[:, 0], index=self.index).reindex(all_timestamps)
 
+        self.regression = SimpleLinearRegression()
         self.regression.fit(self.places, self.prices)
         self.r2 = self.regression.r2
 

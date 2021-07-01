@@ -122,7 +122,8 @@ class IPCA:
                 score = ((self.a - a_old) ** 2).sum() ** 0.5
                 self.scores.append(score)
 
-                if score < self.tol:
+                if score <= self.tol:
                     return self
 
-        raise RuntimeError(f'did not converge in {self.maxiter} iterations. best score: {min(self.scores)}')
+        msg = f'did not converge in {self.maxiter} iterations. best score: {min(self.scores)} > {self.tol}'
+        raise RuntimeError(msg)

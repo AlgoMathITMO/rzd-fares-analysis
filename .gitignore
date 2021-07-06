@@ -1,3 +1,20 @@
+# latex
+
+**.aux
+**.dvi
+**.fdb_latexmk
+**.fls
+**.nav
+**.log
+**.out
+**.snm
+**.toc
+**.xwm
+**.bbl
+**.blg
+**.spl
+**.synctex.gz
+
 # mac
 
 **/.DS_Store

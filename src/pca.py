@@ -43,7 +43,7 @@ class PCA:
 
 
 class IPCA:
-    def __init__(self, n_components: int = 2, maxiter: int = 500, tol: float = 1e-5):
+    def __init__(self, n_components: int = 10, maxiter: int = 1000, tol: float = 1e-5):
         self.n_components = n_components
         self.maxiter = maxiter
         self.tol = tol

@@ -10,7 +10,10 @@ from src.regression import SimpleLinearRegression
 
 
 class PlacePriceModel:
-    def __init__(self):
+    def __init__(self, n_components: int = 10, maxiter: int = 10000):
+        self.n_components = n_components
+        self.maxiter = maxiter
+        
         self.places = None
         self.prices = None
         self.index = None
@@ -25,7 +28,7 @@ class PlacePriceModel:
         self.regression = None
         self.r2 = None
 
-    def fit(self, places: pd.DataFrame, prices: pd.DataFrame, n_components: int) -> 'PlacePriceModel':
+    def fit(self, places: pd.DataFrame, prices: pd.DataFrame) -> 'PlacePriceModel':
         assert places.shape == prices.shape
         assert (places.columns == prices.columns).all()
         assert (places.index == prices.index).all()
@@ -35,7 +38,7 @@ class PlacePriceModel:
         self.index = places.index
         self.columns = places.columns
         
-        self.ipca = IPCA(n_components=n_components, maxiter=100000000)
+        self.ipca = IPCA(n_components=self.n_components, maxiter=self.maxiter)
         self.ipca.fit(self.places)
         self.explained_variance = self.ipca.explained_variance_ratio[0]
         self.mean = pd.Series(self.ipca.mean, index=self.columns)

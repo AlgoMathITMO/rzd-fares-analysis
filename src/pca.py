@@ -59,6 +59,9 @@ class IPCA:
 
         self.v = None
         self.a = None
+        
+        self.v_norm = None
+        self.a_norm = None
 
         self.reconstructed = None
         self.residuals = None
@@ -86,6 +89,10 @@ class IPCA:
                 self.v[:, i] *= -1
 
         self.a = x_centered.dot(self.v)
+        
+        std = self.a.std(axis=0, ddof=1, keepdims=True)
+        self.a_norm = self.a / std
+        self.v_norm = self.v * std
 
         s2 = self.eigval[self.n_components:].mean()
         diag = np.diag((self.eigval[:self.n_components] - s2) / self.eigval[:self.n_components])

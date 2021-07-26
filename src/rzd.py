@@ -42,10 +42,10 @@ class PlacePriceModel:
         self.ipca.fit(self.places)
         self.explained_variance = self.ipca.explained_variance_ratio[0]
         self.mean = pd.Series(self.ipca.mean, index=self.columns)
-        self.v = pd.Series(self.ipca.v[:, 0], index=self.columns)
+        self.v = pd.Series(self.ipca.v_norm[:, 0], index=self.columns)
 
         all_timestamps = np.arange(min(self.index), max(self.index) + timedelta(days=1), timedelta(days=1))
-        self.a = pd.Series(self.ipca.a[:, 0], index=self.index).reindex(all_timestamps)
+        self.a = pd.Series(self.ipca.a_norm[:, 0], index=self.index).reindex(all_timestamps)
 
         self.regression = SimpleLinearRegression()
         self.regression.fit(self.places, self.prices)

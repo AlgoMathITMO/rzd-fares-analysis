@@ -43,7 +43,7 @@ class PCA:
 
 
 class IPCA:
-    def __init__(self, n_components: int = 10, maxiter: int = 1000, tol: float = 1e-5):
+    def __init__(self, n_components: int = 10, maxiter: int = 10000, tol: float = 1e-4):
         self.n_components = n_components
         self.maxiter = maxiter
         self.tol = tol
@@ -90,10 +90,6 @@ class IPCA:
 
         self.a = x_centered.dot(self.v)
         
-        std = self.a.std(axis=0, ddof=1, keepdims=True)
-        self.a_norm = self.a / std
-        self.v_norm = self.v * std
-
         s2 = self.eigval[self.n_components:].mean()
         diag = np.diag((self.eigval[:self.n_components] - s2) / self.eigval[:self.n_components])
 
@@ -104,18 +100,21 @@ class IPCA:
 
         self.residuals = (self.x_filled - self.reconstructed)[self.w.astype(bool)]
 
-    def fit(self, x: np.ndarray) -> 'IPCA':
+    def fit(self, x: np.ndarray, min_periods: int = 10) -> 'IPCA':
         self.x_filled = x.copy()
 
         missing = np.where(np.isnan(self.x_filled))
 
         self.w = np.ones(self.x_filled.shape)
         self.w[missing] = 0
+        
+        if (self.w.sum(axis=0) < min_periods).any():
+            raise RuntimeError(f'some columns have less than {min_periods} values')
+            
+        if (self.w.sum(axis=1) < min_periods).any():
+            raise RuntimeError(f'some rows have less than {min_periods} values')
 
         mean = np.nanmean(self.x_filled, axis=0)
-
-        if np.isnan(mean).any():
-            raise RuntimeError('fully nan columns in fitted data are not accepted')
 
         self.x_filled[missing] = mean[missing[1]]
 
@@ -125,12 +124,18 @@ class IPCA:
             a_old = self.a
             self.step()
 
-            if a_old is not None:
-                score = ((self.a - a_old) ** 2).sum() ** 0.5
-                self.scores.append(score)
+            if a_old is None:  #first iteration
+                continue
 
-                if score <= self.tol:
-                    return self
+            score = (((self.a - a_old) ** 2).sum(axis=1) ** 0.5).mean()
+            self.scores.append(score)
+
+            if score <= self.tol:
+                std = self.a.std(axis=0, ddof=1, keepdims=True)
+                self.a_norm = self.a / std
+                self.v_norm = self.v * std
+
+                return self
 
         msg = f'did not converge in {self.maxiter} iterations. best score: {min(self.scores)} > {self.tol}'
         raise RuntimeError(msg)

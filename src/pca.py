@@ -1,8 +1,12 @@
+from typing import Optional
+
 import numpy as np
 
+from src.missing_values import impute_average
 
-class PCA:
-    def __init__(self, n_components: int = 2):
+
+class ImputePCA:
+    def __init__(self, n_components: Optional[int] = None):
         self.n_components = n_components
 
         self.mean = None
@@ -14,16 +18,24 @@ class PCA:
         self.v = None
         self.a = None
 
+        self.v_norm = None
+        self.a_norm = None
+
         self.reconstructed = None
         self.residuals = None
 
-    def fit(self, x: np.ndarray) -> 'PCA':
+    def fit(self, x: np.ndarray) -> 'ImputePCA':
+        n_components = self.n_components or x.shape[1]
+
+        if np.isnan(x).any():
+            x = impute_average(x, low=np.min(x), high=np.max(x))
+
         self.mean = x.mean(axis=0)
         x_centered = x - self.mean
 
         cov = np.cov(x_centered.T)
 
-        self.eigval, self.eigvec = np.linalg.eig(cov)
+        self.eigval, self.eigvec = np.linalg.eigh(cov)
 
         ids = np.argsort(self.eigval)[::-1]
         self.eigval = self.eigval[ids]
@@ -31,10 +43,17 @@ class PCA:
 
         self.explained_variance_ratio = (self.eigval / self.eigval.sum()).cumsum()
 
-        self.v = self.eigvec[:, :self.n_components]
-        self.v *= self.v[0] / np.abs(self.v[0])
+        self.v = self.eigvec[:, :n_components]
+
+        for i in range(self.v.shape[1]):
+            if (self.v[:, i] < 0).mean() > 0.5:
+                self.v[:, i] *= -1
 
         self.a = x_centered.dot(self.v)
+
+        std = self.a.std(axis=0, ddof=1, keepdims=True)
+        self.a_norm = self.a / std
+        self.v_norm = self.v + std
 
         self.reconstructed = self.mean + self.a.dot(self.v.T)
         self.residuals = (x - self.reconstructed).flatten()

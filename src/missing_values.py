@@ -31,7 +31,7 @@ def nancov(x: np.ndarray, y: np.ndarray, ddof: int = 1) -> float:
     vals = (x - mx) * (y - my)
     n = x.size - np.isnan(vals).sum() - ddof
     
-    return vals.sum() / n
+    return np.nansum(vals) / n
 
 
 def calculate_slope(x: np.ndarray, y: np.ndarray) -> float:
@@ -42,13 +42,18 @@ def impute_average(
         x: np.ndarray,
         low: Optional[float] = None,
         high: Optional[float] = None,
-        period: int = 10,
+        period: int = 7,
 ) -> np.ndarray:
+    x = x.copy()
+    
+    flat = len(x.shape) == 1
+    
+    if flat:
+        x = x.reshape(1, -1)
+    
     x_filled = []
     
     for row in x:
-        row = row.copy()
-        
         idx = np.where(~np.isnan(row))[0]
         
         if len(idx) <= 1:
@@ -83,14 +88,14 @@ def impute_average(
                 
         end = sequences[-1][-1]
         
-        if end < x.shape[1] - 1:
+        if end < row.shape[0] - 1:
             x1 = row[end]
             
             ox = np.arange(end - period, end) + 1
             oy = row[ox]
             slope = calculate_slope(ox, oy)
             
-            for i in range(end + 1, x.shape[1]):
+            for i in range(end + 1, row.shape[0]):
                 row[i] = x1 + (i - end) * slope
                 
         x_filled.append(row)
@@ -103,4 +108,7 @@ def impute_average(
     if high is not None:
         x_filled[x_filled > high] = high
 
+    if flat:
+        x_filled = x_filled.flatten()
+        
     return x_filled

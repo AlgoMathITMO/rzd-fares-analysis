@@ -28,10 +28,10 @@ class ImputePCA:
         n_components = self.n_components or x.shape[1]
 
         if np.isnan(x).any():
-            x = impute_average(x, low=np.min(x), high=np.max(x))
+            x_filled = impute_average(x, low=np.min(x), high=np.max(x))
 
-        self.mean = x.mean(axis=0)
-        x_centered = x - self.mean
+        self.mean = x_filled.mean(axis=0)
+        x_centered = x_filled - self.mean
 
         cov = np.cov(x_centered.T)
 
@@ -53,13 +53,14 @@ class ImputePCA:
 
         std = self.a.std(axis=0, ddof=1, keepdims=True)
         self.a_norm = self.a / std
-        self.v_norm = self.v + std
+        self.v_norm = self.v * std
 
         self.reconstructed = self.mean + self.a.dot(self.v.T)
-        self.residuals = (x - self.reconstructed).flatten()
+        
+        self.residuals = x - self.reconstructed
 
         return self
-
+    
 
 class IPCA:
     def __init__(self, n_components: int = 10, maxiter: int = 10000, tol: float = 1e-4):

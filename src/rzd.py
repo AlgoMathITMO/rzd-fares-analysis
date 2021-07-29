@@ -1,4 +1,5 @@
 from datetime import timedelta
+from typing import Optional
 
 import pandas as pd
 import numpy as np
@@ -8,11 +9,13 @@ from src.regression import SimpleLinearRegression
 
 
 class PlacePriceModel:
-    def __init__(self):
+    def __init__(self, n_components: Optional[int] = None):
         self.places = None
         self.prices = None
         self.index = None
         self.columns = None
+        
+        self.n_components = n_components
 
         self.impute_pca = None
         self.explained_variance = None
@@ -33,7 +36,7 @@ class PlacePriceModel:
         self.index = places.index
         self.columns = places.columns
         
-        self.impute_pca = ImputePCA().fit(self.places)
+        self.impute_pca = ImputePCA(n_components=self.n_components).fit(self.places)
         self.explained_variance = self.impute_pca.explained_variance_ratio[0]
         self.mean = pd.Series(self.impute_pca.mean, index=self.columns)
         self.v = pd.Series(self.impute_pca.v_norm[:, 0], index=self.columns)

@@ -42,6 +42,7 @@ def impute_average(
         x: np.ndarray,
         low: Optional[float] = None,
         high: Optional[float] = None,
+        impute_tails: bool = True,
         period: int = 7,
 ) -> np.ndarray:
     x = x.copy()
@@ -73,7 +74,10 @@ def impute_average(
             
             for i in range(start + 1, end):
                 row[i] = x0 + (i - start) * slope
-                
+        
+        if not impute_tails:
+            continue
+        
         start = sequences[0][0]
         
         if start > 0:

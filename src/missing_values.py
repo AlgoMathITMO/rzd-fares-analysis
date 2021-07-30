@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Tuple, Union
 
 import numpy as np
 
@@ -40,12 +40,22 @@ def calculate_slope(x: np.ndarray, y: np.ndarray) -> float:
 
 def impute_average(
         x: np.ndarray,
-        low: Optional[float] = None,
-        high: Optional[float] = None,
+        lim: Union[None, str, Tuple[float, float]] = 'auto',
         impute_tails: bool = True,
         period: int = 7,
 ) -> np.ndarray:
     x = x.copy()
+    
+    if lim is None:
+        low = None
+        high = None
+        
+    elif lim == 'auto':
+        low = np.min(x)
+        high = np.max(x)
+    
+    else:
+        low, high = lim
     
     flat = len(x.shape) == 1
     

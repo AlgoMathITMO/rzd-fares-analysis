@@ -2,12 +2,19 @@ import numpy as np
 
 
 class SimpleLinearRegression:
+    """Тупо парная линейная регрессия, но с возможностью
+    подавать на вход многомерные матрицы.
+    
+    Обрабатывает пропуски, т.е. обучается только на тех позициях,
+    на которых и `x`, и `y` имеют значения.
+    """
+    
     def __init__(self):
-        self.b0 = None
-        self.b1 = None
+        self.b0 = None  # сдвиг
+        self.b1 = None  # наклон
 
-        self.residuals = None
-        self.r2 = None
+        self.residuals = None  # остатки
+        self.r2 = None  # коэф. детерминации
 
     def fit(self, x: np.ndarray, y: np.ndarray) -> 'SimpleLinearRegression':
         assert x.shape == y.shape

@@ -6,20 +6,36 @@ from src.missing_values import impute_average
 
 
 class ImputePCA:
+    """Метод главных компонент с заполнением пропусков
+    (см. `impute_average`).
+    """
+    
     def __init__(self, n_components: Optional[int] = None):
         self.n_components = n_components
 
         self.explained_variance_ratio = None
         
-        self.mean_vector = None
-        self.eigenvectors = None
-        self.loadings = None
-        self.components = None
-        self.scaled_components = None
+        self.mean_vector = None  # вектор средних
         
-        self.mse = None
+        self.eigenvectors = None  # собственные векторы
+        self.loadings = None  # с.в., умноженные на СКО соответствующих ГК
+        
+        self.components = None  # ГК
+        self.scaled_components = None  # ГК с СКО=1
+        
+        self.mse = None  # MSE при восстановлении данных с помощью ГК
 
     def fit_predict(self, x: np.ndarray, return_scaled: bool = True) -> np.ndarray:
+        """В целом, стандартный фит для PCA, но:
+        
+        1. заполняет пропуски,
+        2. пытается подобрать консистентный знак для собст. векторов
+        (в РЖД-шных данных, например, с.в. должны быть преимущественно
+        положительными).
+        
+        Если `return_scaled=True`, возвращает нормированные ГК (т.е. СКО=1).
+        """
+        
         n_components = self.n_components or x.shape[1]
         
         x_filled = impute_average(x)
@@ -60,6 +76,11 @@ class ImputePCA:
             return self.components
     
     def reconstruct(self, components: np.ndarray, scaled: bool = True) -> np.ndarray:
+        """Восстановление оригинальных данных с помощью ГК.
+        Если `scaled=True`, ожидает, что в `components` подаются
+        нормированные ГК (т.е. СКО=1).
+        """
+        
         if scaled:
             return self.mean_vector + components.dot(self.loadings.T)
         else:
